@@ -7,8 +7,9 @@ const { Client, GatewayIntentBits, Collection } = require("discord.js");
 if (!fs.existsSync("./data")) {
   fs.mkdirSync("./data");
 }
-if (!fs.existsSync(path)) {
-  fs.writeFileSync(path, "{}");
+
+if (!fs.existsSync(xpFile)) {
+  fs.writeFileSync(xpFile, "{}");
 }
 
 const client = new Client({
