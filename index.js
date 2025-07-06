@@ -2,6 +2,7 @@ require("dotenv").config();
 const fs = require("fs");
 const xpFile = "./data/xp.json";
 const path = require("path");
+const xpCooldown = new Set();
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
 if (!fs.existsSync("./data")) {
@@ -39,11 +40,16 @@ client.once("ready", () => {
 client.on("messageCreate", async (message) => {
   if (!message.content.startsWith("!") || message.author.bot) return;
 
-  if (message.author.bot || message.channel.type !== 0) return;
+  if (xpCooldown.has(userId)) return;
+  xpCooldown.add(userId);
+  setTimeout(() => xpCooldown.delete(userId), 60000);
 
   let xpData = {};
-  if (fs.existsSync(xpFile)) {
+  try {
     xpData = JSON.parse(fs.readFileSync(xpFile));
+  } catch (err) {
+    xpData = {};
+    fs.writeFileSync(xpFile, "{}");
   }
 
   const userId = message.author.id;
@@ -57,45 +63,90 @@ client.on("messageCreate", async (message) => {
   xpData[userId].xp += gain;
 
   const nextXP = xpData[userId].level * 100;
+  // if (xpData[userId].xp >= nextXP) {
+  //   xpData[userId].xp -= nextXP;
+  //   xpData[userId].level += 1;
+
+  //   const newLevel = xpData[userId].level;
+  //   const levelChannel = message.guild.channels.cache.find(
+  //     (ch) => ch.name === "level" && ch.type === 0
+  //   );
+
+  //   const notify = `<@${userId}> naik ke **Level ${newLevel}**!`;
+
+  //   if (levelChannel) {
+  //     levelChannel.send(notify);
+  //   } else {
+  //     message.channel.send(notify);
+  //   }
+
+  //   if (newLevel === 10) {
+  //     const member = message.guild.members.cache.get(userId);
+  //     const rookie = message.guild.members.cache.find(
+  //       (r) => r.name === "Rookie"
+  //     );
+  //     const roleMember = message.guild.roles.cache.find(
+  //       (r) => r.name === "Member"
+  //     );
+
+  //     if (member && rookie && roleMember) {
+  //       try {
+  //         await member.roles.remove(rookie);
+  //         await member.roles.add(roleMember);
+
+  //         if (levelChannel) {
+  //           levelChannel.send(
+  //             `<@${userId}> telah menjadi **Member**! Selamat!`
+  //           );
+  //         }
+  //       } catch (err) {
+  //         console.error("Gagal update role:", err);
+  //       }
+  //     }
+  //   }
+  // }
+
   if (xpData[userId].xp >= nextXP) {
     xpData[userId].xp -= nextXP;
     xpData[userId].level += 1;
 
-    const newLevel = xpData[userId].level;
+    const embed = new MessageEmbed()
+      .setColor("#FFD700")
+      .setTitle("🎉 Level Up!")
+      .setDescription(
+        `<@${userId}> sekarang **Level ${xpData[userId].level}**!`
+      )
+      .setThumbnail(message.author.displayAvatarURL())
+      .setTimestamp();
+
     const levelChannel = message.guild.channels.cache.find(
       (ch) => ch.name === "level" && ch.type === 0
     );
 
-    const notify = `<@${userId}> naik ke **Level ${newLevel}**!`;
+    (levelChannel || message.channel).send({ embeds: [embed] });
+  }
 
-    if (levelChannel) {
-      levelChannel.send(notify);
-    } else {
-      message.channel.send(notify);
-    }
+  if (xpData[userId].level === 10) {
+    const member = message.guild.members.cache.get(userId);
+    const rookieRole = message.guild.roles.cache.find(
+      (r) => r.name === "Rookie"
+    );
+    const memberRole = message.guild.roles.cache.find(
+      (r) => r.name === "Member"
+    );
 
-    if (newLevel === 10) {
-      const member = message.guild.members.cache.get(userId);
-      const rookie = message.guild.members.cache.find(
-        (r) => r.name === "Rookie"
-      );
-      const roleMember = message.guild.roles.cache.find(
-        (r) => r.name === "Member"
-      );
+    if (member && rookieRole && memberRole) {
+      try {
+        await member.roles.remove(rookieRole);
+        await member.roles.add(memberRole);
 
-      if (member && rookie && roleMember) {
-        try {
-          await member.roles.remove(rookie);
-          await member.roles.add(roleMember);
+        const embed = new MessageEmbed()
+          .setColor("#00FF00")
+          .setDescription(`🎊 <@${userId}> sekarang menjadi **Member**!`);
 
-          if (levelChannel) {
-            levelChannel.send(
-              `<@${userId}> telah menjadi **Member**! Selamat!`
-            );
-          }
-        } catch (err) {
-          console.error("Gagal update role:", err);
-        }
+        (levelChannel || message.channel).send({ embeds: [embed] });
+      } catch (err) {
+        console.error("Error updating roles:", err);
       }
     }
   }
