@@ -4,7 +4,6 @@ const xpFile = "./data/xp.json";
 const path = require("path");
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
-// Cek dan buat folder & file jika belum ada
 if (!fs.existsSync("./data")) {
   fs.mkdirSync("./data");
 }
