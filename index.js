@@ -1,16 +1,10 @@
 require("dotenv").config();
 const fs = require("fs");
-const path = require("path");
-const {
-  Client,
-  GatewayIntentBits,
-  Collection,
-  EmbedBuilder,
-} = require("discord.js");
-
 const xpFile = "./data/xp.json";
-const xpCooldown = new Set();
+const path = require("path");
+const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
+// Cek dan buat folder & file jika belum ada
 if (!fs.existsSync("./data")) {
   fs.mkdirSync("./data");
 }
@@ -46,20 +40,14 @@ client.once("ready", () => {
 client.on("messageCreate", async (message) => {
   if (!message.content.startsWith("!") || message.author.bot) return;
 
-  const userId = message.author.id;
-
-  if (xpCooldown.has(userId)) return;
-  xpCooldown.add(userId);
-  setTimeout(() => xpCooldown.delete(userId), 60000);
+  if (message.author.bot || message.channel.type !== 0) return;
 
   let xpData = {};
-  try {
+  if (fs.existsSync(xpFile)) {
     xpData = JSON.parse(fs.readFileSync(xpFile));
-  } catch (err) {
-    xpData = {};
-    fs.writeFileSync(xpFile, "{}");
   }
 
+  const userId = message.author.id;
   const guildId = message.guild.id;
 
   if (!xpData[userId]) {
@@ -70,59 +58,51 @@ client.on("messageCreate", async (message) => {
   xpData[userId].xp += gain;
 
   const nextXP = xpData[userId].level * 100;
-
   if (xpData[userId].xp >= nextXP) {
     xpData[userId].xp -= nextXP;
     xpData[userId].level += 1;
 
-    const embed = new EmbedBuilder()
-      .setColor(0xffd700)
-      .setTitle("🎉 Level Up!")
-      .setDescription(
-        `<@${userId}> sekarang **Level ${xpData[userId].level}**!`
-      )
-      .setThumbnail(message.author.displayAvatarURL())
-      .setTimestamp();
-
+    const newLevel = xpData[userId].level;
     const levelChannel = message.guild.channels.cache.find(
       (ch) => ch.name === "level" && ch.type === 0
     );
 
-    (levelChannel || message.channel).send({ embeds: [embed] });
-  }
+    const notify = `<@${userId}> naik ke **Level ${newLevel}**!`;
 
-  if (xpData[userId].level === 10) {
-    const member = message.guild.members.cache.get(userId);
-    const rookieRole = message.guild.roles.cache.find(
-      (r) => r.name === "Rookie"
-    );
-    const memberRole = message.guild.roles.cache.find(
-      (r) => r.name === "Member"
-    );
+    if (levelChannel) {
+      levelChannel.send(notify);
+    } else {
+      message.channel.send(notify);
+    }
 
-    if (member && rookieRole && memberRole) {
-      try {
-        await member.roles.remove(rookieRole);
-        await member.roles.add(memberRole);
+    if (newLevel === 10) {
+      const member = message.guild.members.cache.get(userId);
+      const rookie = message.guild.members.cache.find(
+        (r) => r.name === "Rookie"
+      );
+      const roleMember = message.guild.roles.cache.find(
+        (r) => r.name === "Member"
+      );
 
-        const levelChannel = message.guild.channels.cache.find(
-          (ch) => ch.name === "level" && ch.type === 0
-        );
+      if (member && rookie && roleMember) {
+        try {
+          await member.roles.remove(rookie);
+          await member.roles.add(roleMember);
 
-        const embed = new EmbedBuilder()
-          .setColor(0x00ff00)
-          .setDescription(`🎊 <@${userId}> sekarang menjadi **Member**!`);
-
-        (levelChannel || message.channel).send({ embeds: [embed] });
-      } catch (err) {
-        console.error("Error updating roles:", err);
+          if (levelChannel) {
+            levelChannel.send(
+              `<@${userId}> telah menjadi **Member**! Selamat!`
+            );
+          }
+        } catch (err) {
+          console.error("Gagal update role:", err);
+        }
       }
     }
   }
 
   fs.writeFileSync(xpFile, JSON.stringify(xpData, null, 2));
 
-  // COMMAND HANDLER
   const args = message.content.slice(1).trim().split(/\s+/);
   const commandName = args.shift().toLowerCase();
 
