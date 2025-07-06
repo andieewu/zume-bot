@@ -4,6 +4,13 @@ const xpFile = "./data/xp.json";
 const path = require("path");
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
+if (!fs.existsSync("./data")) {
+  fs.mkdirSync("./data");
+}
+if (!fs.existsSync(path)) {
+  fs.writeFileSync(path, "{}");
+}
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
