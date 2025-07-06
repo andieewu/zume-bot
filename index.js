@@ -71,7 +71,6 @@ client.on("messageCreate", async (message) => {
 
   const nextXP = xpData[userId].level * 100;
 
-  // Level up check
   if (xpData[userId].xp >= nextXP) {
     xpData[userId].xp -= nextXP;
     xpData[userId].level += 1;
@@ -92,7 +91,6 @@ client.on("messageCreate", async (message) => {
     (levelChannel || message.channel).send({ embeds: [embed] });
   }
 
-  // Role reward di level 10
   if (xpData[userId].level === 10) {
     const member = message.guild.members.cache.get(userId);
     const rookieRole = message.guild.roles.cache.find(
