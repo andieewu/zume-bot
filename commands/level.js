@@ -1,32 +1,49 @@
 const fs = require("fs");
-const { EmbedBuilder } = require("discord.js");
-const xpFile = "./data/xp.json";
+const path = require("path");
+const { getXPForNextLevel } = require("../utils/xpUtils");
+
+const xpFile = path.join(__dirname, "..", "data", "xp.json");
 
 module.exports = {
   name: "level",
-  description: "Cek level dan XP kamu",
-  execute(message) {
-    const xpData = JSON.parse(fs.readFileSync(xpFile));
-    const user = xpData[message.author.id];
-
-    if (!user) {
-      return message.reply("Kamu belum punya XP. Ayo mulai aktif ngobrol!");
+  description: "Menampilkan level dan XP kamu saat ini.",
+  async execute(message, args) {
+    if (!fs.existsSync(xpFile)) {
+      return message.reply("📂 Data XP belum tersedia.");
     }
 
-    const nextLevelXP = user.level * 100;
-    const progress = Math.min(Math.floor((user.xp / nextLevelXP) * 100), 100);
+    const xpData = JSON.parse(fs.readFileSync(xpFile));
+    const userId = message.author.id;
 
-    const embed = new EmbedBuilder()
-      .setColor("#0099ff")
-      .setTitle(`📊 Level Stats - ${message.author.username}`)
-      .setThumbnail(message.author.displayAvatarURL())
-      .addFields(
-        { name: "Level", value: `${user.level}`, inline: true },
-        { name: "XP", value: `${user.xp}/${nextLevelXP}`, inline: true },
-        { name: "Progress", value: `${progress}%`, inline: true }
-      )
-      .setTimestamp();
+    if (
+      !xpData[userId] ||
+      (xpData[userId].xp === 0 && xpData[userId].level === 1)
+    ) {
+      return message.reply({
+        embeds: [
+          {
+            color: 0xff0000,
+            title: "❌ Belum Ada XP",
+            description:
+              "Kamu belum memiliki XP. Cobalah kirim pesan di chat terlebih dahulu!",
+          },
+        ],
+      });
+    }
 
-    message.reply({ embeds: [embed] });
+    const { xp, level } = xpData[userId];
+    const nextXP = getXPForNextLevel(level);
+    const progress = Math.floor((xp / nextXP) * 100);
+
+    const embed = {
+      title: `${message.author.username} • Level ${level}`,
+      description: `XP: **${xp}/${nextXP}** (${progress}%)`,
+      color: 0x1abc9c,
+      footer: {
+        text: `Keep chatting untuk naik level!`,
+      },
+    };
+
+    await message.channel.send({ embeds: [embed] });
   },
 };

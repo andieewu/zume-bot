@@ -1,29 +1,23 @@
-const { EmbedBuilder, Guild } = require("discord.js");
-
 module.exports = {
   name: "info",
-  description: "Menampilkan informasi tentang server ini.",
-  execute(message) {
-    const { guild } = message;
+  description: "Menampilkan informasi tentang bot.",
+  async execute(message) {
+    const embed = {
+      title: "🤖 Informasi Bot",
+      description:
+        "Bot Discord ini dibuat untuk memberi pengalaman interaktif dengan sistem level, leaderboard, dan command modular.",
+      color: 0x5865f2,
+      fields: [
+        { name: "Author", value: "Sogoi / Kamu 👤", inline: true },
+        { name: "Prefix", value: "`!`", inline: true },
+        { name: "Bahasa", value: "JavaScript (Node.js)", inline: true },
+      ],
+      footer: {
+        text: "Terima kasih sudah menggunakan bot ini!",
+      },
+      timestamp: new Date(),
+    };
 
-    const embed = new EmbedBuilder()
-      .setColor(0x0099ff)
-      .setTitle("Informasi Server")
-      .setThumbnail(guild.iconURL())
-      .addFields(
-        { name: "Nama Server", value: guild.name, inline: true },
-        { name: "Total Member", value: `${guild.memberCount}`, inline: true },
-        { name: "Server ID", value: guild.id, inline: true },
-        {
-          name: "Dibuat Pada",
-          value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`,
-        }
-      )
-      .setFooter({
-        text: `Diminta oleh ${message.author.tag}`,
-        iconURL: message.author.displayAvatarURL(),
-      });
-
-    message.channel.send({ embeds: [embed] });
+    await message.channel.send({ embeds: [embed] });
   },
 };

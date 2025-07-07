@@ -1,41 +1,92 @@
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  PermissionFlagsBits,
+} = require("discord.js");
+
 module.exports = {
   name: "say",
-  description: "Bot mengulang pesan (spam akan terhapus otomatis)",
+  description: "Bot akan mengulang pesan kamu dengan gaya yang keren.",
   async execute(message, args) {
-    if (!args.length) {
-      return message.reply(
-        "Contoh: `!say Hello` atau `!say Hello*3` (spam 3x)"
-      );
-    }
-
-    const fullInput = args.join(" ");
-    const match = fullInput.match(/^(.*)\*(\d{1,3})$/);
-
-    await message.delete().catch(console.error);
-
-    if (!match) {
-      await message.channel.send(fullInput);
-      return;
-    }
-
-    const content = match[1].trim();
-    const spamCount = parseInt(match[2]);
-
-    if (spamCount > 100) {
-      return message.channel.send("❌ Maksimal 100x spam!").then((msg) => {
-        setTimeout(() => msg.delete(), 5000);
+    if (args.length === 0) {
+      return message.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("Red")
+            .setTitle("❌ Gagal Mengirim Pesan")
+            .setDescription(
+              "Kamu harus mengetik sesuatu.\nContoh: `!say Halo semua!`"
+            )
+            .setFooter({
+              text: `Diminta oleh ${message.author.username}`,
+              iconURL: message.author.displayAvatarURL(),
+            }),
+        ],
       });
     }
 
-    const sentMessages = [];
+    const content = args.join(" ");
 
-    for (let i = 0; i < spamCount; i++) {
-      const sentMsg = await message.channel.send(content);
-      sentMessages.push(sentMsg);
-    }
+    // Coba hapus pesan pengguna
+    // try {
+    //   await message.delete();
+    // } catch (err) {
+    //   console.warn("Gagal hapus pesan pengguna:", err.message);
+    // }
 
-    setTimeout(() => {
-      sentMessages.forEach((msg) => msg.delete().catch(console.error));
-    }, 5000);
+    // Buat embed interaktif
+    const embed = new EmbedBuilder()
+      .setColor("#00BFFF")
+      .setDescription(content)
+      .setFooter({
+        text: `Dikirim oleh ${message.author.username}`,
+        iconURL: message.author.displayAvatarURL(),
+      })
+      .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("delete_say")
+        .setLabel("Hapus Pesan")
+        .setEmoji("🗑️")
+        .setStyle(ButtonStyle.Danger)
+    );
+
+    const sentMessage = await message.channel.send({
+      embeds: [embed],
+      components: [row],
+    });
+
+    // Interaksi tombol
+    const collector = sentMessage.createMessageComponentCollector({
+      time: 60_000, // 1 menit
+    });
+
+    collector.on("collect", async (interaction) => {
+      const isSender = interaction.user.id === message.author.id;
+      const isMod = interaction.member.permissions.has(
+        PermissionFlagsBits.ManageMessages
+      );
+
+      if (interaction.customId === "delete_say") {
+        if (isSender || isMod) {
+          await sentMessage.delete().catch(() => {});
+          if (!isSender) {
+            await interaction.reply({
+              content: "✅ Pesan telah dihapus oleh moderator.",
+              ephemeral: true,
+            });
+          }
+        } else {
+          await interaction.reply({
+            content:
+              "⚠️ Hanya pengirim atau moderator yang bisa menghapus pesan ini.",
+            ephemeral: true,
+          });
+        }
+      }
+    });
   },
 };
