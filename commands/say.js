@@ -7,6 +7,7 @@ module.exports = {
     .addStringOption((option) =>
       option.setName("pesan").setDescription("Isi pesan").setRequired(true)
     ),
+
   async execute(interaction) {
     const pesan = interaction.options.getString("pesan");
 
@@ -15,6 +16,19 @@ module.exports = {
       .setDescription(pesan)
       .setFooter({ text: `Dikirim oleh ${interaction.user.username}` });
 
-    await interaction.reply({ embeds: [embed] });
+    try {
+      await interaction.reply({ embeds: [embed] });
+    } catch (err) {
+      // Jika error karena sudah di-reply sebelumnya
+      if (interaction.deferred || interaction.replied) {
+        console.warn("⚠️ Sudah acknowledged, tidak bisa reply ulang.");
+      } else {
+        await interaction.reply({
+          content: "❌ Terjadi kesalahan saat mengirim pesan.",
+          ephemeral: true,
+        });
+      }
+      console.error("❌ Error saat menjalankan /say:", err);
+    }
   },
 };
