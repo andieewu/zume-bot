@@ -20,26 +20,18 @@ for (const file of commandFiles) {
   }
 }
 
-// Gunakan REST client
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
-// Tentukan ID dari bot dan server (jika ingin hanya untuk 1 guild)
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID; // opsional jika hanya ingin untuk 1 server
+const guildId = process.env.GUILD_ID;
 
 (async () => {
   try {
     console.log("🔁 Menyinkronkan slash commands...");
 
-    // 🔁 Global commands (muncul di semua server, tapi delay 1 jam)
     await rest.put(Routes.applicationCommands(clientId), {
       body: commands,
     });
-
-    // ✅ Jika ingin cepat muncul, gunakan ini (khusus 1 server)
-    // await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-    //   body: commands,
-    // });
 
     console.log("✅ Slash commands berhasil disinkronkan.");
   } catch (error) {
