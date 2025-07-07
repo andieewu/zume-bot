@@ -1,23 +1,28 @@
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
 module.exports = {
-  name: "info",
-  description: "Menampilkan informasi tentang bot.",
-  async execute(message) {
-    const embed = {
-      title: "🤖 Informasi Bot",
-      description:
-        "Bot Discord ini dibuat untuk memberi pengalaman interaktif dengan sistem level, leaderboard, dan command modular.",
-      color: 0x5865f2,
-      fields: [
+  data: new SlashCommandBuilder()
+    .setName("info")
+    .setDescription("Menampilkan informasi tentang bot."),
+
+  async execute(interaction) {
+    const embed = new EmbedBuilder()
+      .setTitle("🤖 Informasi Bot")
+      .setDescription(
+        "Bot ini dibuat untuk memberi pengalaman interaktif seperti sistem level, leaderboard, dan command modular."
+      )
+      .setColor(0x5865f2)
+      .addFields(
         { name: "Author", value: "Sogoi / Kamu 👤", inline: true },
         { name: "Prefix", value: "`!`", inline: true },
-        { name: "Bahasa", value: "JavaScript (Node.js)", inline: true },
-      ],
-      footer: {
+        { name: "Bahasa", value: "JavaScript (Node.js)", inline: true }
+      )
+      .setFooter({
         text: "Terima kasih sudah menggunakan bot ini!",
-      },
-      timestamp: new Date(),
-    };
+        iconURL: interaction.client.user.displayAvatarURL(),
+      })
+      .setTimestamp();
 
-    await message.channel.send({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   },
 };

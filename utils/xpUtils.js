@@ -1,16 +1,34 @@
-// utils/xpUtils.js
-
 const fs = require("fs");
 const path = require("path");
 
-const xpFile = path.join(__dirname, "..", "data", "xp.json");
+const dataDir = path.join(__dirname, "..", "data");
+const xpFile = path.join(dataDir, "xp.json");
+
+function ensureFileExists() {
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+  if (!fs.existsSync(xpFile)) fs.writeFileSync(xpFile, "{}");
+}
 
 function loadXP() {
-  return JSON.parse(fs.readFileSync(xpFile));
+  ensureFileExists();
+
+  try {
+    const raw = fs.readFileSync(xpFile, "utf8");
+    return JSON.parse(raw || "{}");
+  } catch (error) {
+    console.error("❌ Gagal load XP file:", error);
+    return {};
+  }
 }
 
 function saveXP(data) {
-  fs.writeFileSync(xpFile, JSON.stringify(data, null, 2));
+  ensureFileExists();
+
+  try {
+    fs.writeFileSync(xpFile, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error("❌ Gagal simpan XP file:", error);
+  }
 }
 
 function removeXP(userId) {
@@ -24,12 +42,13 @@ function removeXP(userId) {
 }
 
 function getXPForNextLevel(level) {
-  return level * 100; // kamu bisa ubah ini nanti jadi sistem progresif
+  // Bisa diganti sistem progresif (contoh: return 100 * Math.pow(level, 1.5));
+  return level * 100;
 }
 
 module.exports = {
   loadXP,
   saveXP,
-  getXPForNextLevel,
   removeXP,
+  getXPForNextLevel,
 };

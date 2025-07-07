@@ -1,14 +1,20 @@
 const fs = require("fs");
 const path = require("path");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 
 const xpFile = path.join(__dirname, "..", "data", "xp.json");
 
 module.exports = {
-  name: "leaderboard",
-  description: "Menampilkan 5 pengguna teratas berdasarkan XP.",
-  async execute(message) {
+  data: new SlashCommandBuilder()
+    .setName("leaderboard")
+    .setDescription("Menampilkan 5 pengguna teratas berdasarkan XP."),
+
+  async execute(interaction) {
     if (!fs.existsSync(xpFile)) {
-      return message.reply("📂 Data XP belum tersedia.");
+      return interaction.reply({
+        content: "📂 Data XP belum tersedia.",
+        ephemeral: true,
+      });
     }
 
     const xpData = JSON.parse(fs.readFileSync(xpFile));
@@ -17,29 +23,37 @@ module.exports = {
       .sort(([, a], [, b]) => b.level - a.level || b.xp - a.xp)
       .slice(0, 5);
 
+    if (sorted.length === 0) {
+      return interaction.reply({
+        content: "📊 Belum ada data XP untuk ditampilkan.",
+        ephemeral: true,
+      });
+    }
+
+    const emojis = ["🥇", "🥈", "🥉", "🏅", "🎖️"];
+
     const leaderboard = await Promise.all(
       sorted.map(async ([userId, data], index) => {
-        const user = await message.guild.members
+        const member = await interaction.guild.members
           .fetch(userId)
           .catch(() => null);
-        const name = user ? user.user.username : "Unknown";
-        return `${index + 1}. **${name}** – Level ${data.level} • ${
-          data.xp
-        } XP`;
+        const username = member ? member.user.username : "Unknown User";
+        return `${emojis[index] || "🔹"} **${username}** — Level ${
+          data.level
+        } • ${data.xp} XP`;
       })
     );
 
-    await message.channel.send({
-      embeds: [
-        {
-          title: "🏆 Leaderboard XP",
-          description: leaderboard.join("\n"),
-          color: 0xf1c40f,
-          footer: {
-            text: "Semakin banyak yapping, semakin tinggi levelmu!",
-          },
-        },
-      ],
-    });
+    const embed = new EmbedBuilder()
+      .setTitle("🏆 Top 5 Leaderboard XP")
+      .setDescription(leaderboard.join("\n"))
+      .setColor(0xf1c40f)
+      .setFooter({
+        text: "Semakin aktif, semakin tinggi posisimu!",
+        iconURL: interaction.guild.iconURL(),
+      })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

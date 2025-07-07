@@ -1,49 +1,65 @@
 const fs = require("fs");
 const path = require("path");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getXPForNextLevel } = require("../utils/xpUtils");
 
 const xpFile = path.join(__dirname, "..", "data", "xp.json");
 
 module.exports = {
-  name: "level",
-  description: "Menampilkan level dan XP kamu saat ini.",
-  async execute(message, args) {
+  data: new SlashCommandBuilder()
+    .setName("level")
+    .setDescription("Menampilkan level dan XP kamu saat ini."),
+
+  async execute(interaction) {
+    const userId = interaction.user.id;
+
     if (!fs.existsSync(xpFile)) {
-      return message.reply("📂 Data XP belum tersedia.");
+      return interaction.reply({
+        content: "📂 Data XP belum tersedia.",
+        ephemeral: true,
+      });
     }
 
     const xpData = JSON.parse(fs.readFileSync(xpFile));
-    const userId = message.author.id;
 
     if (
       !xpData[userId] ||
       (xpData[userId].xp === 0 && xpData[userId].level === 1)
     ) {
-      return message.reply({
+      return interaction.reply({
         embeds: [
-          {
-            color: 0xff0000,
-            title: "❌ Belum Ada XP",
-            description:
-              "Kamu belum memiliki XP. Cobalah kirim pesan di chat terlebih dahulu!",
-          },
+          new EmbedBuilder()
+            .setColor("Red")
+            .setTitle("❌ Belum Ada XP")
+            .setDescription(
+              "Kamu belum memiliki XP. Cobalah kirim pesan di chat terlebih dahulu!"
+            ),
         ],
+        ephemeral: true,
       });
     }
 
     const { xp, level } = xpData[userId];
     const nextXP = getXPForNextLevel(level);
-    const progress = Math.floor((xp / nextXP) * 100);
+    const progressPercent = Math.floor((xp / nextXP) * 100);
 
-    const embed = {
-      title: `${message.author.username} • Level ${level}`,
-      description: `XP: **${xp}/${nextXP}** (${progress}%)`,
-      color: 0x1abc9c,
-      footer: {
-        text: `Keep chatting untuk naik level!`,
-      },
-    };
+    // Buat progress bar 10 blok
+    const progressBlocks = Math.round((xp / nextXP) * 10);
+    const progressBar =
+      "🟩".repeat(progressBlocks) + "⬛".repeat(10 - progressBlocks);
 
-    await message.channel.send({ embeds: [embed] });
+    const embed = new EmbedBuilder()
+      .setColor(0x1abc9c)
+      .setAuthor({
+        name: `${interaction.user.username} • Level ${level}`,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .setDescription(
+        `XP: **${xp}/${nextXP}** (${progressPercent}%)\n${progressBar}`
+      )
+      .setFooter({ text: "Terus aktif untuk naik level!" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

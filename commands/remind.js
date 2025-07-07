@@ -1,27 +1,63 @@
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
 module.exports = {
-  name: "remind",
-  description: "Setel pengingat sederhana dalam beberapa detik.",
-  async execute(message, args) {
-    if (args.length < 2) {
-      return message.reply("⏰ Format: `!remind <detik> <pesan>`");
+  data: new SlashCommandBuilder()
+    .setName("remind")
+    .setDescription("Setel pengingat sederhana dalam beberapa detik.")
+    .addIntegerOption((option) =>
+      option
+        .setName("detik")
+        .setDescription("Berapa detik hingga pengingat dikirim")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("pesan")
+        .setDescription("Isi pesan pengingat")
+        .setRequired(true)
+    ),
+
+  async execute(interaction) {
+    const seconds = interaction.options.getInteger("detik");
+    const message = interaction.options.getString("pesan");
+
+    if (seconds <= 0) {
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("Red")
+            .setTitle("❌ Waktu Tidak Valid")
+            .setDescription("Waktu harus berupa angka positif (dalam detik)."),
+        ],
+        ephemeral: true,
+      });
     }
 
-    const timeInSeconds = parseInt(args[0]);
+    const targetTime = new Date(Date.now() + seconds * 1000);
+    const formattedTime = `<t:${Math.floor(targetTime.getTime() / 1000)}:T>`;
 
-    if (isNaN(timeInSeconds) || timeInSeconds <= 0) {
-      return message.reply(
-        "❌ Waktu harus berupa angka positif (dalam detik)."
-      );
-    }
-
-    const reminderMessage = args.slice(1).join(" ");
-
-    await message.reply(
-      `📌 Pengingat akan dikirim dalam **${timeInSeconds} detik**.`
-    );
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor("Green")
+          .setTitle("📌 Pengingat Disetel")
+          .setDescription(
+            `Saya akan mengingatkan kamu dalam **${seconds} detik** (${formattedTime}).`
+          ),
+      ],
+      ephemeral: true, // hanya user yang bisa lihat
+    });
 
     setTimeout(() => {
-      message.reply(`🔔 **Pengingat:** ${reminderMessage}`);
-    }, timeInSeconds * 1000);
+      interaction.followUp({
+        content: `<@${interaction.user.id}>`,
+        embeds: [
+          new EmbedBuilder()
+            .setColor("Yellow")
+            .setTitle("🔔 Pengingat")
+            .setDescription(message),
+        ],
+      });
+    }, seconds * 1000);
   },
 };
