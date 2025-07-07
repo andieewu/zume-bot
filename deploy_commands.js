@@ -21,20 +21,25 @@ for (const file of commandFiles) {
 }
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
-
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 
+const mode = process.argv[2] === "prod" ? "prod" : "dev";
+
 (async () => {
   try {
-    console.log("🔁 Menyinkronkan slash commands...");
+    console.log(`🔁 Syncing slash commands in ${mode} mode...`);
 
-    await rest.put(Routes.applicationCommands(clientId), {
-      body: commands,
-    });
-
-    console.log("✅ Slash commands berhasil disinkronkan.");
+    if (mode === "dev") {
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: commands,
+      });
+      console.log("✅ Guild (dev) commands synced.");
+    } else {
+      await rest.put(Routes.applicationCommands(clientId), { body: commands });
+      console.log("✅ Global (prod) commands synced.");
+    }
   } catch (error) {
-    console.error("❌ Gagal sync slash commands:", error);
+    console.error("❌ Gagal sync commands:", error);
   }
 })();
