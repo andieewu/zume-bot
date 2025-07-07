@@ -35,32 +35,16 @@ client.once("ready", () => {
   console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
 });
 
-// client.on("messageCreate", async (message) => {
-//   if (message.author.bot || message.channel.type !== 0) return;
-
-//   await handleXP(message);
-
-//   if (!message.content.startsWith("!")) return;
-
-//   const args = message.content.slice(1).trim().split(/\s+/);
-//   const commandName = args.shift().toLowerCase();
-//   const command = client.commands.get(commandName);
-
-//   if (!command) return;
-
-//   try {
-//     await command.execute(message, args);
-//   } catch (error) {
-//     console.error(`❌ Error di command "${commandName}":`, error);
-//     message.reply("❌ Terjadi kesalahan saat menjalankan perintah.");
-//   }
-// });
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || message.channel.type !== 0) return;
+  await handleXP(message);
+});
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   try {
-    await handleXP(interaction); // jika kamu ingin tetap beri XP saat user gunakan slash command
+    await handleXP(interaction);
   } catch (err) {
     console.warn("Gagal memberi XP saat slash command:", err);
   }
@@ -89,12 +73,10 @@ client.on("interactionCreate", async (interaction) => {
 client.on("guildMemberAdd", async (member) => {
   const guild = member.guild;
 
-  // ✅ Cari channel "welcome"
   const channel =
     guild.systemChannel ||
     guild.channels.cache.find((ch) => ch.name === "welcome" && ch.type === 0);
 
-  // Jika bot yang join
   if (member.user.bot) {
     const botRole = guild.roles.cache.find((r) => r.name === "Bot");
     if (botRole) {
@@ -105,19 +87,16 @@ client.on("guildMemberAdd", async (member) => {
         console.error("❌ Gagal memberi role Bot:", err);
       }
     }
-    return; // ⛔ Stop proses lebih lanjut (tidak kirim welcome)
+    return;
   }
 
-  // ✅ Cari role "Rookie"
   const rookieRole = guild.roles.cache.find((r) => r.name === "Rookie");
 
   if (rookieRole) {
     try {
-      // 🔧 Beri role "Rookie"
       await member.roles.add(rookieRole);
       console.log(`✅ Role Rookie diberikan ke ${member.user.tag}`);
 
-      // ✅ Notifikasi di channel
       if (channel) {
         await channel.send({
           content: `👋 Selamat datang <@${member.id}>!`,
@@ -134,26 +113,6 @@ client.on("guildMemberAdd", async (member) => {
           ],
         });
       }
-
-      // (Opsional) DM user
-      // try {
-      //   await member.send({
-      //     embeds: [
-      //       {
-      //         title: `Selamat datang di ${guild.name}!`,
-      //         description: `Kamu telah diberi role **${
-      //           rookieRole?.name || "Rookie"
-      //         }**.\n\nBaca aturan dan mulai berinteraksi untuk naik level!`,
-      //         color: 0x00ff00,
-      //         footer: { text: "Semoga betah ya!" },
-      //         timestamp: new Date().toISOString(),
-      //       },
-      //     ],
-      //   });
-      //   console.log(`📩 DM welcome dikirim ke ${member.user.tag}`);
-      // } catch (err) {
-      //   console.error(`❌ Gagal kirim DM ke ${member.user.tag}:`, err.message);
-      // }
     } catch (err) {
       console.error("❌ Gagal memberi role Rookie:", err);
     }

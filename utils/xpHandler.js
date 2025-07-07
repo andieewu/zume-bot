@@ -1,7 +1,7 @@
 const { loadXP, saveXP, getXPForNextLevel } = require("../utils/xpUtils");
 const cooldowns = new Map();
 
-const DISABLE_COOLDOWN = true; // Ganti ke false untuk aktifkan cooldown
+const DISABLE_COOLDOWN = true;
 
 async function handleXP(input) {
   const isInteraction = !!input.isChatInputCommand;
@@ -11,38 +11,41 @@ async function handleXP(input) {
 
   if (!guild || !channel || input.user?.bot || input.author?.bot) return;
 
-  // Tidak beri XP jika channel di-ignore
   const ignoredChannels = ["welcome", "level"];
   if (ignoredChannels.includes(channel.name)) return;
 
-  // Tidak beri XP jika perintah prefix (!)
   if (!isInteraction && input.content.startsWith("!")) return;
 
   let xpData = loadXP();
 
   if (!xpData[userId]) {
-    xpData[userId] = { xp: 0, level: 1 };
+    xpData[userId] = { xp: 0, level: 0 };
   }
 
-  // Cooldown 60 detik
   if (!DISABLE_COOLDOWN) {
     const now = Date.now();
     if (cooldowns.has(userId) && now - cooldowns.get(userId) < 60_000) return;
     cooldowns.set(userId, now);
   }
 
-  // Tambah XP acak 5–10
-  const gain = Math.floor(Math.random() * 6) + 5;
-  xpData[userId].xp += gain;
+  if (!isInteraction) {
+    const gain = Math.floor(Math.random() * 6) + 5;
+    xpData[userId].xp += gain;
+  }
 
-  const currentLevel = xpData[userId].level;
-  const nextXP = getXPForNextLevel(currentLevel);
+  let currentLevel = xpData[userId].level;
+  let totalLevelUps = 0;
 
-  if (xpData[userId].xp >= nextXP) {
+  while (xpData[userId].xp >= getXPForNextLevel(currentLevel)) {
+    const nextXP = getXPForNextLevel(currentLevel);
     xpData[userId].xp -= nextXP;
-    xpData[userId].level += 1;
+    currentLevel++;
+    totalLevelUps++;
+  }
 
-    const newLevel = xpData[userId].level;
+  if (totalLevelUps > 0) {
+    xpData[userId].level = currentLevel;
+
     const levelChannel =
       guild.channels.cache.find((ch) => ch.name === "level" && ch.type === 0) ||
       channel;
@@ -53,7 +56,7 @@ async function handleXP(input) {
       const memberRole = guild.roles.cache.find((r) => r.name === "Member");
 
       if (
-        newLevel === 10 &&
+        currentLevel >= 10 &&
         member &&
         rookieRole &&
         memberRole &&
@@ -66,7 +69,7 @@ async function handleXP(input) {
           embeds: [
             {
               title: `🎉 Level Up!`,
-              description: `<@${userId}> telah naik ke **Level ${newLevel}** dan kini menjadi **${memberRole.name}**!`,
+              description: `<@${userId}> telah naik ke **Level ${currentLevel}** dan kini menjadi **${memberRole.name}**!`,
               color: 0x00ff00,
               footer: {
                 text: "Terus aktif dan raih level berikutnya 💪",
@@ -76,7 +79,7 @@ async function handleXP(input) {
         });
       } else {
         await levelChannel.send(
-          `🎉 <@${userId}> naik ke **Level ${newLevel}**!`
+          `🎉 <@${userId}> naik ke **Level ${currentLevel}**!`
         );
       }
     } catch (err) {

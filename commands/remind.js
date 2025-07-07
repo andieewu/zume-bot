@@ -45,7 +45,7 @@ module.exports = {
             `Saya akan mengingatkan kamu dalam **${seconds} detik** (${formattedTime}).`
           ),
       ],
-      ephemeral: true, // hanya user yang bisa lihat
+      ephemeral: true,
     });
 
     setTimeout(() => {

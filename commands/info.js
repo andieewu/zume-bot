@@ -13,9 +13,8 @@ module.exports = {
       )
       .setColor(0x5865f2)
       .addFields(
-        { name: "Author", value: "Sogoi / Kamu 👤", inline: true },
-        { name: "Prefix", value: "`!`", inline: true },
-        { name: "Bahasa", value: "JavaScript (Node.js)", inline: true }
+        { name: "Author", value: "Andika Wisnumurti", inline: true },
+        { name: "Bahasa Program", value: "JavaScript (Node.js)", inline: true }
       )
       .setFooter({
         text: "Terima kasih sudah menggunakan bot ini!",

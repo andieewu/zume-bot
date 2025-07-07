@@ -42,8 +42,7 @@ function removeXP(userId) {
 }
 
 function getXPForNextLevel(level) {
-  // Bisa diganti sistem progresif (contoh: return 100 * Math.pow(level, 1.5));
-  return level * 100;
+  return (level + 1) * 100;
 }
 
 module.exports = {

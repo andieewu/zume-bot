@@ -5,6 +5,13 @@ const { getXPForNextLevel } = require("../utils/xpUtils");
 
 const xpFile = path.join(__dirname, "..", "data", "xp.json");
 
+function generateProgressBar(percent) {
+  const totalBlocks = 20;
+  const filled = Math.round((percent / 100) * totalBlocks);
+  const empty = totalBlocks - filled;
+  return `\`${"█".repeat(filled)}${"░".repeat(empty)}\` ${percent}%`;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("level")
@@ -24,15 +31,15 @@ module.exports = {
 
     if (
       !xpData[userId] ||
-      (xpData[userId].xp === 0 && xpData[userId].level === 1)
+      (xpData[userId].level === 0 && xpData[userId].xp === 0)
     ) {
       return interaction.reply({
         embeds: [
           new EmbedBuilder()
             .setColor("Red")
-            .setTitle("❌ Belum Ada XP")
+            .setTitle("🚫 Belum Ada XP")
             .setDescription(
-              "Kamu belum memiliki XP. Cobalah kirim pesan di chat terlebih dahulu!"
+              "Kamu masih di level 0 dan belum punya XP.\nCobalah aktif di chat untuk mulai mengumpulkan XP!"
             ),
         ],
         ephemeral: true,
@@ -42,11 +49,7 @@ module.exports = {
     const { xp, level } = xpData[userId];
     const nextXP = getXPForNextLevel(level);
     const progressPercent = Math.floor((xp / nextXP) * 100);
-
-    // Buat progress bar 10 blok
-    const progressBlocks = Math.round((xp / nextXP) * 10);
-    const progressBar =
-      "🟩".repeat(progressBlocks) + "⬛".repeat(10 - progressBlocks);
+    const progressBar = generateProgressBar(progressPercent);
 
     const embed = new EmbedBuilder()
       .setColor(0x1abc9c)
@@ -55,7 +58,7 @@ module.exports = {
         iconURL: interaction.user.displayAvatarURL(),
       })
       .setDescription(
-        `XP: **${xp}/${nextXP}** (${progressPercent}%)\n${progressBar}`
+        `XP: **${xp.toLocaleString()} / ${nextXP.toLocaleString()}**\nProgress: ${progressBar}`
       )
       .setFooter({ text: "Terus aktif untuk naik level!" })
       .setTimestamp();
