@@ -15,7 +15,7 @@ for (const file of commandFiles) {
     commands.push(command.data.toJSON());
   } else {
     console.warn(
-      `[WARNING] File ${file} tidak memiliki properti 'data' atau 'execute'.`
+      `[WARNING] File ${file} tidak memiliki 'data' atau 'execute'.`
     );
   }
 }
@@ -24,10 +24,17 @@ const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 
-const mode = process.argv[2] === "prod" ? "prod" : "dev";
+const mode = process.argv[2] || "dev"; // dev | prod | clear
 
 (async () => {
   try {
+    if (mode === "clear") {
+      console.log("🗑️ Menghapus semua global command...");
+      await rest.put(Routes.applicationCommands(clientId), { body: [] });
+      console.log("✅ Semua global command terhapus.");
+      return;
+    }
+
     console.log(`🔁 Syncing slash commands in ${mode} mode...`);
 
     if (mode === "dev") {
@@ -35,9 +42,11 @@ const mode = process.argv[2] === "prod" ? "prod" : "dev";
         body: commands,
       });
       console.log("✅ Guild (dev) commands synced.");
-    } else {
+    } else if (mode === "prod") {
       await rest.put(Routes.applicationCommands(clientId), { body: commands });
       console.log("✅ Global (prod) commands synced.");
+    } else {
+      console.log("⚠️ Mode tidak dikenali. Gunakan: dev | prod | clear");
     }
   } catch (error) {
     console.error("❌ Gagal sync commands:", error);

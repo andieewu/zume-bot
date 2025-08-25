@@ -1,5 +1,8 @@
 .env
 node_modules
-# data/xp.json
+cmd
+data/xp.json
 *.log
 invite_url.txt
+index.txt
+deploy_commands.js
