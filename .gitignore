@@ -1,8 +1,9 @@
 .env
 node_modules
 cmd
-data/xp.json
+data_old
+utils_old
 *.log
 invite_url.txt
 index.txt
-deploy_commands.js
+deploy-commands.js
