@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
-// Load config
 const configPath = path.join(__dirname, "config.json");
 let config = {};
 if (fs.existsSync(configPath)) {
@@ -16,7 +15,6 @@ const client = new Client({
 
 client.commands = new Collection();
 
-// Load commands
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs
   .readdirSync(commandsPath)
@@ -31,7 +29,6 @@ client.once("ready", () => {
   console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
 });
 
-// Interaction handler
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -49,7 +46,6 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-// Welcome message
 client.on("guildMemberAdd", async (member) => {
   if (member.user.bot) return;
 

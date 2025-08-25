@@ -23,6 +23,8 @@ module.exports = {
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    await interaction.reply(`✅ Welcome channel berhasil diset ke ${channel}`);
+    await interaction.reply(
+      `Success! Welcome channel berhasil diset ke ${channel}`
+    );
   },
 };
