@@ -104,7 +104,7 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      const ROLE_ID = "1402557967727071374";
+      const ROLE_ID = "1402557967727071374"; // ROLE Senior
       const role = interaction.guild.roles.cache.get(ROLE_ID);
 
       if (!role) {
