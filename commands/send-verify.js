@@ -40,13 +40,13 @@ module.exports = {
 
     const button = new ButtonBuilder()
       .setCustomId("verify_age")
-      .setLabel("✅ Klik untuk Verifikasi 18+")
+      .setLabel("🟢 Klik untuk Verifikasi")
       .setStyle(ButtonStyle.Success);
 
     const row = new ActionRowBuilder().addComponents(button);
 
     await verifyChannel.send({
-      content: "⚠️ Silakan klik tombol di bawah untuk verifikasi umur 18+",
+      content: "**Silakan klik tombol di bawah untuk verifikasi umur 18+**",
       components: [row],
     });
 
