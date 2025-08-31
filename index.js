@@ -44,7 +44,6 @@ client.once("ready", () => {
       {
         name: "@andieewu",
         type: ActivityType.Playing,
-        emoji: "😏",
       },
     ],
     status: "dnd",
