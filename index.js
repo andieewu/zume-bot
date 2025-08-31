@@ -11,6 +11,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  ActivityType,
 } = require("discord.js");
 
 const configPath = path.join(__dirname, "config.json");
@@ -37,6 +38,17 @@ for (const file of commandFiles) {
 
 client.once("ready", () => {
   console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [
+      {
+        name: "@andieewu",
+        type: ActivityType.Playing,
+        emoji: "😏",
+      },
+    ],
+    status: "dnd",
+  });
 });
 
 client.on("interactionCreate", async (interaction) => {
