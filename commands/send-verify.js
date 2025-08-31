@@ -3,6 +3,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -16,14 +17,12 @@ if (fs.existsSync(configPath)) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("send-verify")
-    .setDescription("Kirim pesan verifikasi umur 18+ ke channel"),
+    .setDescription("Kirim pesan verifikasi umur 18+ ke channel")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
     const guildId = interaction.guild.id;
     const verifyChannelId = config[guildId]?.verifyChannel;
-
-    // console.log(`Guild ID: ${guildId}`);
-    // console.log(`Verify Channel ID from config: ${verifyChannelId}`);
 
     if (!verifyChannelId)
       return interaction.reply({
@@ -40,8 +39,8 @@ module.exports = {
 
     const button = new ButtonBuilder()
       .setCustomId("verify_age")
-      .setLabel("🟢 Klik untuk Verifikasi")
-      .setStyle(ButtonStyle.Success);
+      .setLabel("👆 Klik untuk Verifikasi")
+      .setStyle(ButtonStyle.Primary);
 
     const row = new ActionRowBuilder().addComponents(button);
 
