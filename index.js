@@ -43,7 +43,7 @@ client.once("ready", () => {
     activities: [
       {
         name: "@andieewu",
-        type: ActivityType.Playing,
+        type: ActivityType.Listening,
       },
     ],
     status: "dnd",
