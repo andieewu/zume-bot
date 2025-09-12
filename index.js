@@ -1,6 +1,7 @@
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
+const { ActivityType } = require("discord.js");
 const {
   Client,
   GatewayIntentBits,
@@ -36,18 +37,28 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once("ready", () => {
-  console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
+function setBotPresence(client) {
+  const activities = [
+    { name: "@andieewu", type: ActivityType.Listening },
+    { name: "Visual Studio Code", type: ActivityType.Playing },
+    { name: "Few Words Server 👀", type: ActivityType.Watching },
+  ];
+
+  const activity = activities[Math.floor(Math.random() * activities.length)];
 
   client.user.setPresence({
-    activities: [
-      {
-        name: "@andieewu",
-        type: ActivityType.Listening,
-      },
-    ],
+    activities: [activity],
     status: "dnd",
   });
+
+  console.log(`✅ Presence updated: ${activity.type} ${activity.name}`);
+}
+
+client.once("ready", () => {
+  console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
+  setBotPresence(client);
+
+  setInterval(() => setBotPresence(client), 5 * 60 * 1000);
 });
 
 client.on("interactionCreate", async (interaction) => {
