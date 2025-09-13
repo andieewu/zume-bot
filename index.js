@@ -39,7 +39,7 @@ for (const file of commandFiles) {
 function setBotPresence(client) {
   const activities = [
     { name: "@andieewu", type: ActivityType.Listening },
-    { name: "Visual Studio Code", type: ActivityType.Playing },
+    { name: "Victim", type: ActivityType.Playing },
     { name: "Few Words Server 👀", type: ActivityType.Watching },
   ];
 
