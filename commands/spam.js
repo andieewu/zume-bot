@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+} = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -8,7 +12,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("pesan")
-        .setDescription("Isi pesan yang akan di spam")
+        .setDescription("Isi pesan yang akan di-spam")
         .setRequired(true)
     )
     .addIntegerOption((option) =>
@@ -23,13 +27,13 @@ module.exports = {
     const pesan = interaction.options.getString("pesan");
     const jumlah = interaction.options.getInteger("jumlah") || 5;
 
-    // acknowledge dulu biar ga error
-    await interaction.deferReply({ ephemeral: true });
+    // acknowledge dulu (jawaban cepat ke Discord)
+    await interaction.reply({
+      content: `🚨 Mulai spam ${jumlah}x dengan pesan:\n> ${pesan}`,
+      flags: MessageFlags.Ephemeral, // ✅ ganti dari "ephemeral"
+    });
 
-    await interaction.editReply(
-      `🚨 Mulai spam ${jumlah}x dengan pesan:\n> ${pesan}`
-    );
-
+    // kirim spam di channel
     for (let i = 0; i < jumlah; i++) {
       await interaction.channel.send(pesan);
     }
