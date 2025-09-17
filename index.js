@@ -40,7 +40,7 @@ function setBotPresence(client) {
   const activities = [
     { name: "@andieewu", type: ActivityType.Listening },
     { name: "Victim", type: ActivityType.Playing },
-    { name: "Few Words Server 👀", type: ActivityType.Watching },
+    { name: "Zume Ganteng", type: ActivityType.Watching },
   ];
 
   const activity = activities[Math.floor(Math.random() * activities.length)];
