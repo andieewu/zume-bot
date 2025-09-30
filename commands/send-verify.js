@@ -45,7 +45,8 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(button);
 
     await verifyChannel.send({
-      content: "**Silakan klik tombol di bawah untuk verifikasi umur 18+**",
+      content:
+        "**Silakan klik tombol di bawah untuk verifikasi bahwa kamu sudah berumur 18+",
       components: [row],
     });
 
