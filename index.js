@@ -1,4 +1,6 @@
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
 const {
   Client,
   GatewayIntentBits,
@@ -12,18 +14,11 @@ const {
   ActivityType,
 } = require("discord.js");
 
-const initDB = require("./initDB");
-let db;
-
-(async () => {
-  db = await initDB();
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS welcome_channels (
-      guild_id TEXT PRIMARY KEY,
-      channel_id TEXT NOT NULL
-    )
-  `);
-})();
+const configPath = path.join(__dirname, "config.json");
+let config = {};
+if (fs.existsSync(configPath)) {
+  config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -31,8 +26,6 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const fs = require("fs");
-const path = require("path");
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs
   .readdirSync(commandsPath)
@@ -73,7 +66,7 @@ client.on("interactionCreate", async (interaction) => {
     if (!command) return;
 
     try {
-      await command.execute(interaction, db);
+      await command.execute(interaction, config, configPath);
     } catch (err) {
       console.error(err);
       await interaction.reply({
@@ -132,20 +125,8 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      const row = await db.get(
-        "SELECT role_id FROM verify_settings WHERE guild_id = ?",
-        [interaction.guild.id]
-      );
-
-      if (!row) {
-        return await interaction.reply({
-          content: "❌ Role verifikasi belum diset. Gunakan /setup-verify.",
-          ephemeral: true,
-        });
-      }
-
-      const roleId = row.role_id;
-      const role = interaction.guild.roles.cache.get(roleId);
+      const ROLE_ID = "1402557967727071374"; // ROLE Senior
+      const role = interaction.guild.roles.cache.get(ROLE_ID);
 
       if (!role) {
         return await interaction.reply({
@@ -154,9 +135,9 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      if (interaction.member.roles.cache.has(roleId)) {
+      if (interaction.member.roles.cache.has(ROLE_ID)) {
         return await interaction.reply({
-          content: `⚠️ Kamu sudah pernah verifikasi dan memiliki role <@&${roleId}>`,
+          content: `⚠️ Kamu sudah pernah verifikasi dan memiliki role <@&${ROLE_ID}>`,
           ephemeral: true,
         });
       }
@@ -164,7 +145,7 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.member.roles.add(role);
 
       await interaction.reply({
-        content: `✅ Verifikasi berhasil! Kamu sudah mendapatkan role <@&${roleId}>`,
+        content: `✅ Verifikasi berhasil! Kamu sudah mendapatkan role <@&${ROLE_ID}>`,
         ephemeral: true,
       });
     }
@@ -174,13 +155,11 @@ client.on("interactionCreate", async (interaction) => {
 client.on("guildMemberAdd", async (member) => {
   if (member.user.bot) return;
 
-  const row = await db.get(
-    "SELECT channel_id FROM welcome_channels WHERE guild_id = ?",
-    [member.guild.id]
-  );
-  if (!row) return;
+  const guildId = member.guild.id;
+  const channelId = config[guildId]?.welcomeChannel;
+  if (!channelId) return;
 
-  const channel = member.guild.channels.cache.get(row.channel_id);
+  const channel = member.guild.channels.cache.get(channelId);
   if (!channel) return;
 
   await channel.send({
