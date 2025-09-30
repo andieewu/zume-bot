@@ -5,14 +5,7 @@ const {
   ButtonStyle,
   PermissionFlagsBits,
 } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
-
-const configPath = path.join(__dirname, "../config.json");
-let config = {};
-if (fs.existsSync(configPath)) {
-  config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-}
+const initDB = require("../database");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -22,31 +15,39 @@ module.exports = {
 
   async execute(interaction) {
     const guildId = interaction.guild.id;
-    const verifyChannelId = config[guildId]?.verifyChannel;
+    const db = await initDB();
 
-    if (!verifyChannelId)
+    const row = await db.get(
+      `SELECT channel_id FROM verify_channels WHERE guild_id = ?`,
+      [guildId]
+    );
+
+    if (!row) {
       return interaction.reply({
         content: "❌ Channel verifikasi belum diset. Gunakan /setup-verify",
         ephemeral: true,
       });
+    }
 
-    const verifyChannel = interaction.guild.channels.cache.get(verifyChannelId);
-    if (!verifyChannel)
+    const verifyChannel = interaction.guild.channels.cache.get(row.channel_id);
+    if (!verifyChannel) {
       return interaction.reply({
         content: "❌ Channel verifikasi tidak ditemukan di server!",
         ephemeral: true,
       });
+    }
 
     const button = new ButtonBuilder()
       .setCustomId("verify_age")
       .setLabel("👆 Klik untuk Verifikasi")
       .setStyle(ButtonStyle.Primary);
 
-    const row = new ActionRowBuilder().addComponents(button);
+    const rowBtn = new ActionRowBuilder().addComponents(button);
 
     await verifyChannel.send({
-      content: "**Silakan klik tombol di bawah untuk verifikasi umur 18+**",
-      components: [row],
+      content:
+        "**Silakan klik tombol di bawah untuk verifikasi bahwa kamu sudah berumur 18+",
+      components: [rowBtn],
     });
 
     await interaction.reply({

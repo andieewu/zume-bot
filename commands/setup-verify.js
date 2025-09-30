@@ -1,26 +1,32 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const fs = require("fs");
+const db = require("../database");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup-verify")
-    .setDescription("Set channel untuk log verifikasi umur 18+")
-    .addChannelOption((opt) =>
-      opt.setName("channel").setDescription("Channel").setRequired(true)
+    .setDescription("Set role target untuk verifikasi umur 18+")
+    .addRoleOption((opt) =>
+      opt
+        .setName("role")
+        .setDescription("Role yang diberikan setelah verifikasi berhasil")
+        .setRequired(true)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, config, configPath) {
-    const channel = interaction.options.getChannel("channel");
-    const guildId = interaction.guild.id;
+  async execute(interaction) {
+    const role = interaction.options.getRole("role");
 
-    if (!config[guildId]) config[guildId] = {};
-    config[guildId].verifyChannel = channel.id;
+    db.prepare(
+      `
+      INSERT INTO verify_settings (guild_id, role_id)
+      VALUES (?, ?)
+      ON CONFLICT(guild_id) DO UPDATE SET role_id = excluded.role_id
+    `
+    ).run(interaction.guild.id, role.id);
 
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-
-    await interaction.reply(
-      `✅ Channel verifikasi umur berhasil diset ke ${channel}`
-    );
+    await interaction.reply({
+      content: `✅ Role verifikasi diset ke ${role}`,
+      ephemeral: true,
+    });
   },
 };

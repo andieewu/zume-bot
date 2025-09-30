@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const fs = require("fs");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,14 +9,16 @@ module.exports = {
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, config, configPath) {
+  async execute(interaction, db) {
     const channel = interaction.options.getChannel("channel");
     const guildId = interaction.guild.id;
 
-    if (!config[guildId]) config[guildId] = {};
-    config[guildId].welcomeChannel = channel.id;
-
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    await db.run(
+      `INSERT INTO welcome_channels (guild_id, channel_id)
+   VALUES (?, ?)
+   ON CONFLICT(guild_id) DO UPDATE SET channel_id = excluded.channel_id`,
+      [guildId, channel.id]
+    );
 
     await interaction.reply(`✅ Welcome channel berhasil diset ke ${channel}`);
   },
