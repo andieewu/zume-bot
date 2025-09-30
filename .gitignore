@@ -6,3 +6,4 @@ utils_old
 *.log
 invite_url.txt
 index.txt
+config.json
