@@ -46,7 +46,7 @@ module.exports = {
 
     await verifyChannel.send({
       content:
-        "**Silakan klik tombol di bawah untuk verifikasi bahwa kamu sudah berumur 18+",
+        "**Silakan klik tombol di bawah untuk verifikasi bahwa kamu sudah berumur 18+**",
       components: [row],
     });
 
